@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [ ! -f "GridToFormula.java" ] || [ ! -f "ValuationToSolution.java" ]; then
+  echo "Error: missing source files 'GridToFormula.java' and/or 'ValuationToSolution.java'." >&2
+  exit 1
+fi
+
+if [ ! command -v minisat &> /dev/null ]; then
+  echo "Error: minisat is not installed." >&2
+  exit 1
+fi
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 <unsolved-grid> [solved-grid]"
+  exit 1
+fi
+
+if [ ! -f "$1" ]; then
+  echo "Error: First argument should be a file."
+  exit 1
+fi
+
+if [[ ! -f "GridToFormula.class" ]]; then
+  javac "GridToFormula.java"
+  if [[ $? -ne 0 ]]; then
+    echo "Compilation of GridToFormula.java failed. Exiting."
+    exit 1
+  fi
+fi
+
+if [[ ! -f "ValuationToSolution.class" ]]; then
+  javac "ValuationToSolution.java"
+  if [[ $? -ne 0 ]]; then
+    echo "Compilation of ValuationToSolution.java failed. Exiting."
+    exit 1
+  fi
+fi
+
+VALUATION=$(mktemp --suffix .minisat)
+
+java GridToValuation $1 | minisat /dev/stdin $VALUATION > /dev/null 2>&1
+
+if [ ! -z "$2" ]; then
+  java ValuationToSolution --raw $VALUATION > $2
+else
+  java $VALUATION_TO_SOLUTION $VALUATION
+fi
+
+rm $VALUATION
+
