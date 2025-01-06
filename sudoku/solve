@@ -38,12 +38,12 @@ fi
 
 VALUATION=$(mktemp --suffix .minisat)
 
-java GridToValuation $1 | minisat /dev/stdin $VALUATION > /dev/null 2>&1
+java GridToFormula $1 | minisat /dev/stdin $VALUATION > /dev/null 2>&1
 
 if [ ! -z "$2" ]; then
   java ValuationToSolution --raw $VALUATION > $2
 else
-  java $VALUATION_TO_SOLUTION $VALUATION
+  java ValuationToSolution $VALUATION
 fi
 
 rm $VALUATION
