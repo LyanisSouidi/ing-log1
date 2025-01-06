@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if [ ! -f "GridToFormula.java" ] || [ ! -f "ValuationToSolution.java" ]; then
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+
+if [ ! -f "$SCRIPT_DIR/GridToFormula.java" ] || [ ! -f "$SCRIPT_DIR/ValuationToSolution.java" ]; then
   echo "Error: missing source files 'GridToFormula.java' and/or 'ValuationToSolution.java'." >&2
   exit 1
 fi
@@ -20,16 +22,16 @@ if [ ! -f "$1" ]; then
   exit 1
 fi
 
-if [[ ! -f "GridToFormula.class" ]]; then
-  javac "GridToFormula.java"
+if [[ ! -f "$SCRIPT_DIR/GridToFormula.class" ]]; then
+  javac "$SCRIPT_DIR/GridToFormula.java"
   if [[ $? -ne 0 ]]; then
     echo "Compilation of GridToFormula.java failed. Exiting."
     exit 1
   fi
 fi
 
-if [[ ! -f "ValuationToSolution.class" ]]; then
-  javac "ValuationToSolution.java"
+if [[ ! -f "$SCRIPT_DIR/ValuationToSolution.class" ]]; then
+  javac "$SCRIPT_DIR/ValuationToSolution.java"
   if [[ $? -ne 0 ]]; then
     echo "Compilation of ValuationToSolution.java failed. Exiting."
     exit 1
@@ -38,12 +40,12 @@ fi
 
 VALUATION=$(mktemp --suffix .minisat)
 
-java GridToFormula $1 | minisat /dev/stdin $VALUATION > /dev/null 2>&1
+java -cp $SCRIPT_DIR GridToFormula $1 | minisat /dev/stdin $VALUATION > /dev/null 2>&1
 
 if [ ! -z "$2" ]; then
-  java ValuationToSolution --raw $VALUATION > $2
+  java -cp $SCRIPT_DIR ValuationToSolution --raw $VALUATION > $2
 else
-  java ValuationToSolution $VALUATION
+  java -cp $SCRIPT_DIR ValuationToSolution $VALUATION
 fi
 
 rm $VALUATION
